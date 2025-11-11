@@ -1,8 +1,27 @@
-import Modules.P2PNetwork.Network.Server as nw
-import Modules.Utils.getProperties as gp
+import logging
+import time
 
-# Inicializar Nodo P2P
-ip = gp.get_properties_from_yaml['server_ip']
-puerto = gp.get_properties_from_yaml['server_port']
+from Modules.P2PNetwork.Orchestration.Node import Node
+from Modules.Utils.getProperties import get_properties_from_yaml
 
-nw.iniciar_servidor(ip, puerto)
+
+def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+
+    config = get_properties_from_yaml()
+    node = Node(config)
+    node.iniciar()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logging.info("Deteniendo nodo...")
+        node.detener()
+
+
+if __name__ == "__main__":
+    main()
