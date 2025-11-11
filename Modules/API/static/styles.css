@@ -1,0 +1,270 @@
+:root {
+  color-scheme: dark;
+  --bg: #0c0f16;
+  --bg-card: #151b26;
+  --bg-accent: #1e2533;
+  --text: #f5f5f7;
+  --muted: #8b94a7;
+  --primary: #5dd6ff;
+  --primary-dark: #1aa8d8;
+  --border: rgba(255, 255, 255, 0.08);
+  --success: #66f2a3;
+  --danger: #ff6c8f;
+  font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #111a2b, #07090f 70%);
+  color: var(--text);
+  padding: 2rem clamp(1rem, 3vw, 3rem);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h2 {
+  margin-top: 0;
+  font-weight: 500;
+}
+
+.subtitle {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+main {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+.card {
+  background: rgba(12, 15, 22, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+}
+
+.card header {
+  margin-bottom: 1rem;
+  padding: 0;
+}
+
+.status {
+  grid-column: 1 / -1;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.status-grid article {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.value {
+  margin: 0.4rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.wallet-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.wallet-card {
+  background: var(--bg-accent);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid transparent;
+}
+
+.wallet-card:hover {
+  border-color: var(--primary);
+}
+
+.wallet-card .address {
+  font-size: 0.9rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.wallet-card .balance {
+  font-size: 1.25rem;
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+.actions form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field label {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+input,
+select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--primary);
+  border-color: transparent;
+}
+
+.split {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #04121b;
+  box-shadow: 0 10px 25px rgba(93, 214, 255, 0.35);
+}
+
+.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.block {
+  width: 100%;
+}
+
+.table {
+  overflow-x: auto;
+}
+
+.table table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 400px;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.table th {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.table td {
+  font-size: 0.95rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge.success {
+  background: rgba(102, 242, 163, 0.15);
+  color: var(--success);
+}
+
+.badge.muted {
+  background: rgba(139, 148, 167, 0.1);
+  color: var(--muted);
+}
+
+.feedback {
+  min-height: 1.2rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.feedback.success {
+  color: var(--success);
+}
+
+.feedback.error {
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card {
+    padding: 1.2rem;
+  }
+}
