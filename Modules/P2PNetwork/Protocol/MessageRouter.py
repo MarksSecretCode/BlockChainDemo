@@ -29,11 +29,15 @@ def configurar_router(peer_manager: PeerManager, broadcaster: Broadcaster, node)
 
 def procesar_mensaje(peer: Peer, mensaje: Dict[str, Any]) -> None:
     tipo = (mensaje.get("type") or "").upper()
+    mensaje_id = mensaje.get("id")
+    if mensaje_id and _BROADCASTER:
+        _BROADCASTER.registrar_mensaje_visto(mensaje_id)
     handlers = {
         "PING": manejar_ping,
         "PONG": manejar_pong,
         "NEW_TX": manejar_new_tx,
         "PEER_LIST": manejar_peer_list,
+        "NEW_BLOCK": manejar_new_block,
     }
     handler = handlers.get(tipo)
     if not handler:
@@ -54,10 +58,11 @@ def manejar_pong(peer: Peer, mensaje: Dict[str, Any]) -> None:
 
 
 def manejar_new_tx(peer: Peer, mensaje: Dict[str, Any]) -> None:
-    if not _BROADCASTER:
-        logger.warning("No hay broadcaster configurado; se omite NEW_TX.")
+    if not _NODE:
+        logger.warning("No hay nodo configurado; se omite NEW_TX.")
         return
-    _BROADCASTER.broadcast_mensaje(mensaje, peer_origen=peer)
+    data = mensaje.get("data") or {}
+    _NODE.registrar_transaccion_remota(data)
 
 
 def manejar_peer_list(peer: Peer, mensaje: Dict[str, Any]) -> None:
@@ -84,3 +89,11 @@ def manejar_peer_list(peer: Peer, mensaje: Dict[str, Any]) -> None:
     if nuevos:
         logger.debug("Recibida lista de %s peers desde %s", len(nuevos), peer.direccion)
         _NODE.conectar_a_bootnodes(nuevos)
+
+
+def manejar_new_block(peer: Peer, mensaje: Dict[str, Any]) -> None:
+    if not _NODE:
+        logger.warning("No hay nodo configurado para manejar NEW_BLOCK.")
+        return
+    data = mensaje.get("data") or {}
+    _NODE.registrar_bloque_remoto(data)

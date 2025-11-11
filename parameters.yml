@@ -1,2 +1,19 @@
 server_ip: 127.0.0.1
 server_port: 5000
+bootnodes: []
+
+# Configuración de minería y cadena
+mining_enabled: true
+mining_leading_ones: 10
+max_txs_per_block: 8
+block_reward: 25
+initial_balance: 100
+
+# Wallet por defecto para el nodo local (semilla opcional para reproducibilidad)
+wallet_label: "miner-node"
+wallet_seed: "demo-node"
+
+# API REST
+api_enabled: true
+api_host: 127.0.0.1
+api_port: 8080

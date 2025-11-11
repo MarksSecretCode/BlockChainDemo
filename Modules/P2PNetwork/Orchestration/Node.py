@@ -10,6 +10,7 @@ import time
 from collections import defaultdict
 from typing import Dict, Iterable, List, Optional
 
+from Modules.Blockchain import Blockchain
 from Modules.P2PNetwork.Network import Client, Server
 from Modules.P2PNetwork.Network.Connection import Connection
 from Modules.P2PNetwork.Peer.Peer import Peer
@@ -31,17 +32,23 @@ class Node:
         self.config = config or {}
         self.peer_manager = PeerManager()
         self.broadcaster = BroadcasterModule.configurar_broadcaster(self.peer_manager)
+        self.blockchain = Blockchain(self.config)
+        self.blockchain.attach_broadcaster(self.broadcaster)
         MessageRouter.configurar_router(self.peer_manager, self.broadcaster, self)
 
         self.ip = self.config.get("server_ip", "127.0.0.1")
         self.port = int(self.config.get("server_port", 5000))
         self.heartbeat_interval = float(self.config.get("heartbeat_interval", 15.0))
+        self.api_enabled = bool(self.config.get("api_enabled", True))
+        self.api_host = self.config.get("api_host", "127.0.0.1")
+        self.api_port = int(self.config.get("api_port", self.port + 1000))
 
         self._server: Optional[Server.P2PServer] = None
         self._running = False
         self._stop_event = threading.Event()
         self._listener_threads: List[threading.Thread] = []
         self._buffers: Dict[str, bytes] = defaultdict(bytes)
+        self._api_server = None
 
     # API pública --------------------------------------------------------- #
     def iniciar(self) -> None:
@@ -54,12 +61,15 @@ class Node:
             self.ip, self.port, on_connection=self._manejar_conexion_entrante
         )
         logger.info("Nodo escuchando en %s:%s", self.ip, self.port)
+        self.blockchain.start()
 
         bootnodes = self.config.get("bootnodes") or []
         if bootnodes:
             self.conectar_a_bootnodes(bootnodes)
 
         threading.Thread(target=self._heartbeat_loop, daemon=True).start()
+        if self.api_enabled:
+            self._start_api_server()
 
     def detener(self) -> None:
         if not self._running:
@@ -72,6 +82,8 @@ class Node:
 
         for peer in self.peer_manager.todos_los_peers():
             peer.marcar_como_desconectado()
+        self.blockchain.stop()
+        self._stop_api_server()
 
     def conectar_a_bootnodes(self, lista_bootnodes: Iterable) -> None:
         for descriptor in lista_bootnodes:
@@ -112,6 +124,24 @@ class Node:
             return
 
         MessageRouter.procesar_mensaje(peer, mensaje)
+
+    # Blockchain ---------------------------------------------------------- #
+    def registrar_transaccion_remota(self, data: Dict) -> bool:
+        agregado = self.blockchain.add_transaction_from_network(data)
+        if agregado:
+            logger.info("Transacción remota registrada (%s).", data.get("tx_id", "")[:10])
+        return agregado
+
+    def registrar_bloque_remoto(self, data: Dict) -> bool:
+        resultado = self.blockchain.handle_remote_block(data)
+        if resultado:
+            logger.info("Bloque remoto aceptado.")
+        return resultado
+
+    def enviar_transaccion(self, destinatario: str, monto: float, metadata: Optional[Dict] = None):
+        tx = self.blockchain.create_transaction(destinatario, monto, metadata)
+        logger.info("Transacción local %s creada hacia %s.", tx.tx_id[:10], destinatario)
+        return tx
 
     # Internos ------------------------------------------------------------ #
     def _parse_bootnode(self, descriptor) -> (Optional[str], Optional[int]):
@@ -180,6 +210,31 @@ class Node:
             peer.enviar_mensaje(MessageUtils.serializar_mensaje(mensaje))
         except Exception:
             peer.marcar_como_desconectado()
+
+    # API ---------------------------------------------------------------- #
+    def _start_api_server(self) -> None:
+        if self._api_server:
+            return
+        try:
+            from Modules.API import APIServer
+        except RuntimeError as exc:
+            logger.error("No fue posible iniciar la API REST: %s", exc)
+            return
+        except Exception as exc:  # pragma: no cover
+            logger.exception("Error inesperado al cargar la API REST: %s", exc)
+            return
+
+        try:
+            self._api_server = APIServer(self, host=self.api_host, port=self.api_port)
+            self._api_server.start()
+        except OSError as exc:
+            logger.error("No se pudo iniciar la API REST en %s:%s (%s)", self.api_host, self.api_port, exc)
+            self._api_server = None
+
+    def _stop_api_server(self) -> None:
+        if self._api_server:
+            self._api_server.stop()
+            self._api_server = None
 
     def _enviar_ping(self, peer: Peer) -> None:
         try:
